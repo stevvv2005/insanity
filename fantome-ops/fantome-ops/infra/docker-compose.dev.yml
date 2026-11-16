@@ -1,0 +1,10 @@
+# Surcharge locale : expose les services sur 127.0.0.1 pour tester sans Discord.
+# docker compose --env-file ../secrets.env -f infra/docker-compose.yml -f infra/docker-compose.dev.yml up --build
+services:
+  ops-api:
+    ports: ["127.0.0.1:8080:8080"]
+    networks: [internal, devnet]
+  archiviste-llm:
+    ports: ["127.0.0.1:8081:8081"]
+networks:
+  devnet: {}

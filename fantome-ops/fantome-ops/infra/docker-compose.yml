@@ -1,0 +1,50 @@
+# Lancer : make up   (équivaut à: docker compose --env-file ../secrets.env -f infra/docker-compose.yml up -d --build)
+# Chaque service ne reçoit que SES secrets (moindre privilège).
+name: fantome-ops
+
+services:
+  ops-api:
+    build: ../step5-opsapi
+    environment:
+      SIGNING_KEY: ${SIGNING_KEY}
+      KEY_DATE: ${KEY_DATE}
+      HALF_1: ${HALF_1}
+      STEP5_FLAG: ${STEP5_FLAG}
+    networks: [internal]
+    read_only: true
+    tmpfs: [/tmp]
+    cpus: 0.5
+    mem_limit: 256m
+    restart: unless-stopped
+
+  archiviste-llm:
+    build: ../step6-llm
+    environment:
+      HALF_2: ${HALF_2}
+      FLAG_PREFIX: ${FLAG_PREFIX}
+      LLM_BACKEND: ${LLM_BACKEND}
+      LLM_MODEL: ${LLM_MODEL}
+      LLM_BASE_URL: ${LLM_BASE_URL}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      HARDENING: ${HARDENING}
+      MAX_REQ_PER_TEAM: ${MAX_REQ_PER_TEAM}
+    networks: [internal, egress]   # egress : appel à l'API du modèle
+    read_only: true
+    tmpfs: [/tmp]
+    cpus: 0.5
+    mem_limit: 256m
+    restart: unless-stopped
+
+  # À brancher quand le bot Discord Sentinelle existe (image issue de step4-docker) :
+  # sentinelle:
+  #   image: sentinelle:1.0
+  #   environment:
+  #     DISCORD_TOKEN: ${SENTINELLE_TOKEN}
+  #     SIGNING_KEY: ${SIGNING_KEY}
+  #     OPS_API_URL: ${OPS_API_URL}
+  #   networks: [internal, egress]
+
+networks:
+  internal:
+    internal: true
+  egress: {}
